@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>North Coast Merry-Go-Round</title><meta name="theme-color" content="#0b6f86">
+<style>
+:root{--bg:#e9eef2;--ink:#1f2d3d;--mut:#66748a;--teal:#0e8aa6;--org:#e8590c;--grn:#5b9a0a;--blue:#4b6fd6;--navy:#3a4a63;--red:#d63b3b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:76px}
+main{max-width:760px;margin:auto;padding:12px}
+header.top{background:#0b6f86;color:#fff;padding:14px 16px 16px}header.top h1{margin:0;font-size:21px;letter-spacing:.2px}header.top p{margin:2px 0 0;opacity:.85;font-size:13px}
+h2{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:20px 4px 8px}
+.card{display:block;background:#fff;border-radius:8px;border-left:4px solid var(--c,var(--teal));padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 3px #0001;color:inherit;text-decoration:none}
+.card .hd{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--c,var(--teal));display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:6px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.grid .card{margin:0}
+.big{font-size:18px;font-weight:700;margin:6px 0 2px}.mut{color:var(--mut);font-size:13px;margin:4px 0 0}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:2px 0}.row b{overflow-wrap:anywhere}.sc{font-size:22px;font-weight:800;min-width:26px;text-align:right}
+.pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:#e3f2dc;color:#3d7a08;text-transform:none;letter-spacing:0}
+.pill.scheduled{background:#e2ebfb;color:#3556b5}.pill.live{background:#fde0e0;color:#c22;animation:p 1.4s infinite}.pill.postponed,.pill.cancelled{background:#fdebd9;color:#b34700}
+@keyframes p{50%{opacity:.5}}@media(prefers-reduced-motion:reduce){.pill.live{animation:none}}
+.tw{overflow-x:auto;background:#fff;border-radius:8px;box-shadow:0 1px 3px #0001}table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:8px 6px;text-align:center;white-space:nowrap}th{font-size:11px;color:var(--mut);border-bottom:1px solid #e3e8ee}td:nth-child(2),th:nth-child(2){text-align:left;font-weight:600;white-space:normal;min-width:110px}tr:nth-child(even) td{background:#f7f9fb}td:last-child{font-weight:800}
+nav.bot{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #d8dfe6;display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:5}
+nav.bot a{flex:1;text-align:center;padding:12px 2px;font-size:12px;font-weight:600;color:var(--mut);text-decoration:none;border-top:3px solid transparent}nav.bot a.on{color:var(--teal);border-color:var(--teal)}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #f5a623;outline-offset:2px}
+label{display:block;font-size:12px;font-weight:600;color:var(--mut);margin:10px 0 3px}input,select,textarea{width:100%;font:inherit;padding:11px;border:1px solid #c8d1db;border-radius:6px;background:#fff}
+button,.btn{font:inherit;font-weight:700;background:var(--teal);color:#fff;border:0;border-radius:6px;padding:11px 16px;min-height:44px;cursor:pointer;text-decoration:none;display:inline-block}
+button.alt{background:#e3e8ee;color:var(--ink)}button.dng{background:var(--red)}.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.acts button{padding:8px 12px;min-height:38px}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px}.tabs button{background:#fff;color:var(--ink);white-space:nowrap}.tabs button.on{background:var(--navy);color:#fff}
+.sets{display:grid;grid-template-columns:auto 1fr 1fr;gap:6px;align-items:center}.err{background:#fde0e0;color:#a22;padding:10px;border-radius:6px;margin:10px 0}.ok{background:#e3f2dc;color:#3d7a08;padding:10px;border-radius:6px;margin:10px 0}
+.sk{height:70px;border-radius:8px;background:linear-gradient(90deg,#dde4ea,#eef2f5,#dde4ea);background-size:200% 100%;animation:s 1.2s infinite;margin-bottom:10px}@keyframes s{to{background-position:-200% 0}}
+.logo{width:40px;height:40px;border-radius:50%;object-fit:cover;background:#dfe6ec}
+</style></head><body>
+<header class="top"><h1>North Coast Merry-Go-Round</h1><p id="sub">Volleyball · North Coast, Mombasa, Kenya</p></header>
+<main id="app"></main>
+<nav class="bot" aria-label="Main"><a href="/" data-n="home">Home</a><a href="/fixtures" data-n="fixtures">Fixtures</a><a href="/results" data-n="results">Results</a><a href="/standings" data-n="standings">Table</a><a href="/teams" data-n="teams">Teams</a><a href="/about" data-n="about">About</a></nav>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="/config.js"></script>
+<script>
+const sb=supabase.createClient(NCMGR.url,NCMGR.anonKey);
+let D=null,me=null,tab='dash',editM=null,resM=null,editT=null,msg='';
+const $=s=>document.querySelector(s),app=$('#app');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ST={scheduled:'Upcoming',live:'Live',completed:'Full time',postponed:'Postponed',cancelled:'Cancelled'};
+const pill=s=>`<span class="pill ${s}">${ST[s]}</span>`;
+async function load(){
+  const q=t=>sb.from(t).select('*');
+  const R=await Promise.all([q('teams').order('name'),q('matchdays').order('number'),q('matches').order('scheduled_date').order('scheduled_time'),q('match_sets').order('set_number'),sb.from('standings').select('*'),q('announcements').order('created_at',{ascending:false}),q('competition_settings').limit(1)]);
+  const e=R.find(x=>x.error);if(e)throw e.error;
+  const [t,md,m,s,st,a,c]=R.map(x=>x.data);
+  st.sort((x,y)=>y.points-x.points||y.set_diff-x.set_diff||y.sets_won-x.sets_won||x.name.localeCompare(y.name));
+  D={t,md,m,s,st,a,c:c[0]||{},tm:Object.fromEntries(t.map(x=>[x.id,x])),mdm:Object.fromEntries(md.map(x=>[x.id,x]))};
+  if(D.c.competition_name)$('#sub').textContent=`Volleyball · ${D.c.location||''} · ${D.c.frequency||''}`;
+}
+const sets=m=>D.s.filter(x=>x.match_id===m.id);
+const score=m=>{const s=sets(m);return{a:s.filter(x=>x.team1_score>x.team2_score).length,b:s.filter(x=>x.team2_score>x.team1_score).length}};
+const fdate=m=>m.scheduled_date?new Date(m.scheduled_date+'T'+(m.scheduled_time||'00:00')).toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long'})+(m.scheduled_time?', '+new Date('1970-01-01T'+m.scheduled_time).toLocaleTimeString('en-KE',{hour:'numeric',minute:'2-digit'}):''):'Date to be confirmed';
+const mdn=m=>D.mdm[m.matchday_id]?.name||'Matchday';
+const tn=id=>esc(D.tm[id]?.name||'?');
+const logo=t=>t.logo_url?`<img class="logo" src="${esc(t.logo_url)}" alt="" loading="lazy">`:`<div class="logo" aria-hidden="true"></div>`;
+function mcard(m,c){const r=score(m),d=m.status==='completed';return `<a class="card" style="--c:${c||'var(--org)'}" href="/match/${m.id}"><div class="hd"><span>${esc(mdn(m))}</span>${pill(m.status)}</div>
+<div class="row"><b>${tn(m.team1_id)}</b><span class="sc">${d?r.a:''}</span></div><div class="row"><b>${tn(m.team2_id)}</b><span class="sc">${d?r.b:''}</span></div><p class="mut">${fdate(m)}. ${esc(m.venue||'Venue to be confirmed')}</p></a>`}
+const empty=t=>`<div class="card" style="--c:var(--mut)"><p class="mut" style="margin:0">${t}</p></div>`;
+const list=(a,t,f)=>a.length?a.map(f).join(''):empty(t);
+function stTable(rows){if(!rows.length)return empty('Standings will appear once matches have been completed.');
+return `<div class="tw"><table><thead><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>L</th><th>SW</th><th>SL</th><th>SD</th><th>Pts</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td><a href="/team/${r.team_id}" style="color:inherit">${esc(r.name)}</a></td><td>${r.played}</td><td>${r.won}</td><td>${r.lost}</td><td>${r.sets_won}</td><td>${r.sets_lost}</td><td>${r.set_diff}</td><td>${r.points}</td></tr>`).join('')}</tbody></table></div>`}
+const ann=a=>`<div class="card" style="--c:var(--navy)"><div class="hd"><span>${esc(a.title)}</span><span class="mut">${new Date(a.created_at).toLocaleDateString('en-KE')}</span></div>${a.image_url?`<img src="${esc(a.image_url)}" alt="" style="max-width:100%;border-radius:6px" loading="lazy">`:''}<p style="margin:6px 0 0;white-space:pre-wrap">${esc(a.content)}</p></div>`;
+const upc=()=>D.m.filter(m=>['scheduled','live','postponed'].includes(m.status));
+const done=()=>D.m.filter(m=>m.status==='completed').sort((a,b)=>(b.scheduled_date||'').localeCompare(a.scheduled_date||''));
+const pub=()=>D.a.filter(a=>a.published);
+
+const V={
+home(){const u=upc(),n=u[0],lr=done().slice(0,3);return `<h2>Next match</h2>${n?mcard(n):empty('No upcoming fixtures.')}
+<h2>Latest results</h2>${list(lr,'No results have been recorded yet.',m=>mcard(m,'var(--teal)'))}
+<h2>Standings</h2>${stTable(D.st.slice(0,6))}<div class="acts"><a class="btn" href="/standings">View full standings</a></div>
+<h2>Upcoming fixtures</h2>${list(u.slice(1,4),'No more fixtures yet.',m=>mcard(m))}<h2>Announcements</h2>${list(pub().slice(0,3),'No announcements available.',ann)}`},
+fixtures(){const u=upc();if(!u.length)return empty('No fixtures have been published yet.');
+return D.md.map(d=>{const f=u.filter(m=>m.matchday_id===d.id);return f.length?`<h2>${esc(d.name)}</h2>`+f.map(m=>mcard(m)).join(''):''}).join('')},
+results(){return list(done(),'No results have been recorded.',m=>mcard(m,'var(--teal)'))},
+standings(){return `<h2>League table</h2>${stTable(D.st)}<p class="mut">P played, W won, L lost, SW/SL sets won/lost, SD set difference, Pts points.</p>`},
+teams(){return `<h2>${D.t.filter(t=>t.active).length} teams</h2><div class="grid">${D.t.filter(t=>t.active).map(t=>{const s=D.st.find(x=>x.team_id===t.id)||{};return `<a class="card" style="--c:var(--blue)" href="/team/${t.id}">${logo(t)}<div class="big">${esc(t.name)}</div><p class="mut">${esc(t.location||'')}</p><p class="mut">P${s.played||0} W${s.won||0} L${s.lost||0} · ${s.points||0} pts</p></a>`}).join('')}</div>`},
+team(id){const t=D.tm[id];if(!t)return empty('Team not found.');const s=D.st.find(x=>x.team_id===id),pos=D.st.findIndex(x=>x.team_id===id)+1,ms=D.m.filter(m=>m.team1_id===id||m.team2_id===id);
+return `<div class="card" style="--c:var(--blue)">${logo(t)}<div class="big">${esc(t.name)}</div><p class="mut">${esc(t.location||'')}</p><p>${esc(t.description||'')}</p>${s?`<p><b>Position ${pos||'-'}</b>. Played ${s.played}, won ${s.won}, lost ${s.lost}, ${s.points} points.</p>`:''}</div>
+<h2>Fixtures and results</h2>${list(ms,'No matches yet.',m=>mcard(m,m.status==='completed'?'var(--teal)':'var(--org)'))}`},
+match(id){const m=D.m.find(x=>x.id===id);if(!m)return empty('Match not found.');const r=score(m);
+return `<div class="card" style="--c:var(--org)"><div class="hd"><span>${esc(D.c.competition_name||'')} ${esc(mdn(m))}</span>${pill(m.status)}</div><div class="row"><b class="big">${tn(m.team1_id)}</b><span class="sc">${m.status==='completed'?r.a:''}</span></div><div class="row"><b class="big">${tn(m.team2_id)}</b><span class="sc">${m.status==='completed'?r.b:''}</span></div><p class="mut">${fdate(m)}. ${esc(m.venue||'Venue to be confirmed')}</p></div>
+<h2>Set scores</h2>${sets(m).length?`<div class="card" style="--c:var(--teal)">${sets(m).map(s=>`<div class="row"><span>Set ${s.set_number}</span><b>${s.team1_score} – ${s.team2_score}</b></div>`).join('')}</div>`:empty('No set scores recorded yet.')}`},
+about(){const c=D.c;return `<div class="card" style="--c:var(--navy)"><div class="hd">About</div><div class="big">${esc(c.competition_name)}</div><p>A volleyball competition played by ${D.t.filter(t=>t.active).length} teams across ${esc(c.location)}. Matches are played ${esc((c.frequency||'').toLowerCase())}.</p><p class="mut">Points: 3-0 or 3-1 win earns ${c.points_rules?.win_3_0??3}, 3-2 win ${c.points_rules?.win_3_2??2}, 2-3 loss ${c.points_rules?.loss_2_3??1}.</p></div><h2>Announcements</h2>${list(pub(),'No announcements available.',ann)}<div class="acts"><a class="btn alt" href="/admin">Admin login</a></div>`}
+};
+
+/* ---------- ADMIN ---------- */
+const F=(n,l,t='text',v='',x='')=>`<label for="${n}">${l}</label><input id="${n}" name="${n}" type="${t}" value="${esc(v)}" ${x}>`;
+const SEL=(n,l,o,v)=>`<label for="${n}">${l}</label><select id="${n}" name="${n}">${o.map(([k,t])=>`<option value="${k}" ${k==v?'selected':''}>${esc(t)}</option>`).join('')}</select>`;
+const fd=e=>Object.fromEntries(new FormData(e.target));
+async function admin(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session)return `<div class="card" style="--c:var(--red)"><div class="hd">Admin login</div><form id="login">${F('email','Email','email','','required autocomplete=email')}${F('password','Password','password','','required autocomplete=current-password')}<div class="acts"><button>Log in</button></div>${msg?`<div class="err">${esc(msg)}</div>`:''}</form></div>`;
+  const {data:p}=await sb.from('profiles').select('role').eq('id',session.user.id).single();
+  if(p?.role!=='admin')return `<div class="card" style="--c:var(--red)"><div class="hd">Not authorised</div><p>This account does not have admin access.</p><div class="acts"><button class="alt" data-act="out">Log out</button><a class="btn" href="/">Back to site</a></div></div>`;
+  me=session.user;const T=[['dash','Dashboard'],['matches','Matches'],['days','Matchdays'],['teams','Teams'],['ann','Announcements'],['set','Settings']];
+  const tabs=`<div class="tabs" role="tablist">${T.map(([k,l])=>`<button class="${tab===k?'on':''}" data-tab="${k}">${l}</button>`).join('')}<button class="alt" data-act="out">Log out</button></div>${msg?`<div class="${msg.startsWith('!')?'err':'ok'}">${esc(msg.replace(/^!/,''))}</div>`:''}`;
+  const tp=D.t.map(t=>[t.id,t.name]);let b='';
+  if(tab==='dash')b=`<div class="grid"><div class="card"><div class="hd">Teams</div><div class="big">${D.t.length}</div></div><div class="card" style="--c:var(--org)"><div class="hd">Upcoming</div><div class="big">${upc().length}</div></div><div class="card" style="--c:var(--grn)"><div class="hd">Completed</div><div class="big">${done().length}</div></div><div class="card" style="--c:var(--navy)"><div class="hd">Matchdays</div><div class="big">${D.md.length}</div></div></div><h2>Recent results</h2>${list(done().slice(0,3),'No results yet.',m=>mcard(m,'var(--teal)'))}<h2>Standings</h2>${stTable(D.st.slice(0,5))}`;
+  if(tab==='matches'){const m=editM?D.m.find(x=>x.id===editM):{};b=`<div class="card" style="--c:var(--org)"><div class="hd">${m.id?'Edit match':'New match'}</div><form id="fm">${SEL('matchday_id','Matchday',D.md.map(d=>[d.id,d.name]),m.matchday_id)}${SEL('team1_id','Team 1',tp,m.team1_id)}${SEL('team2_id','Team 2',tp,m.team2_id)}${F('scheduled_date','Date','date',m.scheduled_date)}${F('scheduled_time','Time','time',m.scheduled_time?.slice(0,5))}${F('venue','Venue','text',m.venue)}${SEL('status','Status',Object.entries(ST).filter(([k])=>k!=='completed'||m.status==='completed'),m.status||'scheduled')}<div class="acts"><button>Save match</button>${m.id?'<button type="button" class="alt" data-act="cancel">Cancel</button>':''}</div></form></div>`;
+    if(resM){const m2=D.m.find(x=>x.id===resM),ss=sets(m2);b=`<div class="card" style="--c:var(--teal)"><div class="hd">Enter result</div><b>${tn(m2.team1_id)} vs ${tn(m2.team2_id)}</b><form id="fr"><div class="sets">${[1,2,3,4,5].map(i=>{const s=ss.find(x=>x.set_number===i)||{};return `<span>Set ${i}</span><input name="a${i}" type="number" min="0" inputmode="numeric" placeholder="${tn(m2.team1_id)}" value="${s.team1_score??''}" aria-label="Set ${i} team 1"><input name="b${i}" type="number" min="0" inputmode="numeric" placeholder="${tn(m2.team2_id)}" value="${s.team2_score??''}" aria-label="Set ${i} team 2">`}).join('')}</div><p class="mut">Sets 1-4 go to 25, set 5 to 15, win by 2. Leave unplayed sets empty.</p><div class="acts"><button>Save result</button><button type="button" class="dng" data-act="clr">Clear result</button><button type="button" class="alt" data-act="cancel">Close</button></div></form></div>`}
+    b+=`<h2>All matches</h2>`+list(D.m,'No fixtures yet.',m=>`<div class="card" style="--c:var(--org)"><div class="hd"><span>${esc(mdn(m))}</span>${pill(m.status)}</div><b>${tn(m.team1_id)} vs ${tn(m.team2_id)}</b><p class="mut">${fdate(m)}</p><div class="acts"><button data-res="${m.id}">Result</button><button class="alt" data-edit="${m.id}">Edit</button><button class="dng" data-del="${m.id}">Delete</button></div></div>`)}
+  if(tab==='days')b=`<div class="card" style="--c:var(--navy)"><div class="hd">New matchday</div><form id="fd">${F('number','Number','number','','required min=1')}${F('name','Name','text','','required placeholder="Matchday 01"')}${F('date','Date','date')}<div class="acts"><button>Add matchday</button></div></form></div>`+list(D.md,'No matchdays yet.',d=>`<div class="card" style="--c:var(--navy)"><b>${esc(d.name)}</b><p class="mut">${d.date||''}</p><div class="acts"><button class="dng" data-deld="${d.id}">Delete</button></div></div>`);
+  if(tab==='teams'){const t=editT?D.tm[editT]:{};b=`<div class="card" style="--c:var(--blue)"><div class="hd">${t.id?'Edit team':'Add team'}</div><form id="ft">${F('name','Name','text',t.name,'required')}${F('location','Location','text',t.location)}${F('description','Description','text',t.description)}${SEL('active','Status',[['true','Active'],['false','Inactive']],String(t.active??true))}<label for="logo">Logo</label><input id="logo" name="logo" type="file" accept="image/*"><div class="acts"><button>Save team</button>${t.id?'<button type="button" class="alt" data-act="cancel">Cancel</button>':''}</div></form></div>`+D.t.map(t=>`<div class="card" style="--c:var(--blue)"><div class="row"><b>${esc(t.name)} ${t.active?'':'(inactive)'}</b><span class="acts" style="margin:0"><button class="alt" data-et="${t.id}">Edit</button><button class="dng" data-dt="${t.id}">Delete</button></span></div></div>`).join('')}
+  if(tab==='ann')b=`<div class="card" style="--c:var(--navy)"><div class="hd">New announcement</div><form id="fa">${F('title','Title','text','','required')}<label for="content">Content</label><textarea id="content" name="content" rows="4"></textarea>${SEL('published','Status',[['true','Published'],['false','Draft']],'true')}<label for="img">Image (optional)</label><input id="img" name="img" type="file" accept="image/*"><div class="acts"><button>Save</button></div></form></div>`+list(D.a,'No announcements yet.',a=>`<div class="card" style="--c:var(--navy)"><b>${esc(a.title)}</b> ${a.published?'':'<span class="pill postponed">Draft</span>'}<div class="acts"><button class="alt" data-pub="${a.id}">${a.published?'Unpublish':'Publish'}</button><button class="dng" data-dela="${a.id}">Delete</button></div></div>`);
+  if(tab==='set'){const c=D.c,r=c.points_rules||{};b=`<div class="card" style="--c:var(--red)"><div class="hd">Competition settings</div><form id="fs">${F('competition_name','Name','text',c.competition_name)}${F('location','Location','text',c.location)}${F('frequency','Frequency','text',c.frequency)}${F('win_3_0','Points: win 3-0 or 3-1','number',r.win_3_0??3)}${F('win_3_2','Points: win 3-2','number',r.win_3_2??2)}${F('loss_2_3','Points: loss 2-3','number',r.loss_2_3??1)}<div class="acts"><button>Save settings</button></div></form></div>`}
+  return tabs+b}
+
+async function act(p){msg='';try{await p;await load();msg=msg||'Saved.'}catch(e){msg='!'+(e.message||e)}await render()}
+const up=async f=>{if(!f||!f.size)return null;const n=`${Date.now()}-${f.name.replace(/[^\w.]/g,'_')}`;const {error}=await sb.storage.from('media').upload(n,f);if(error)throw error;return sb.storage.from('media').getPublicUrl(n).data.publicUrl};
+const chk=async r=>{if(r.error)throw r.error};
+document.addEventListener('submit',async e=>{e.preventDefault();const id=e.target.id,v=fd(e);
+ if(id==='login'){const {error}=await sb.auth.signInWithPassword({email:v.email,password:v.password});msg=error?error.message:'';return render()}
+ if(id==='fm'){if(v.team1_id===v.team2_id){msg='!A team cannot play itself.';return render()}v.scheduled_date=v.scheduled_date||null;v.scheduled_time=v.scheduled_time||null;const w=editM;editM=null;return act((async()=>chk(w?await sb.from('matches').update(v).eq('id',w):await sb.from('matches').insert(v)))())}
+ if(id==='fr'){const m=D.m.find(x=>x.id===resM),rows=[];let a=0,b=0;
+  for(let i=1;i<=5;i++){const x=v['a'+i],y=v['b'+i];if(x===''&&y==='')continue;if(x===''||y==='')return err(`Set ${i} needs both scores.`);
+   if(a===3||b===3)return err('Match already decided; remove extra sets.');const p=+x,q=+y,t=i===5?15:25,hi=Math.max(p,q),lo=Math.min(p,q);
+   if(hi<t||hi-lo<2||(hi>t&&hi-lo!==2))return err(`Set ${i} is not a valid volleyball score.`);p>q?a++:b++;rows.push({match_id:m.id,set_number:i,team1_score:p,team2_score:q})}
+  if(!((a===3&&b<3)||(b===3&&a<3)))return err('A completed match needs one team with 3 sets.');
+  resM=null;return act((async()=>{await chk(await sb.from('match_sets').delete().eq('match_id',m.id));await chk(await sb.from('match_sets').insert(rows));await chk(await sb.from('matches').update({status:'completed'}).eq('id',m.id))})())}
+ if(id==='fd')return act((async()=>chk(await sb.from('matchdays').insert({...v,date:v.date||null})))());
+ if(id==='ft'){const w=editT;editT=null;return act((async()=>{const o={name:v.name,location:v.location,description:v.description,active:v.active==='true'};const u=await up(v.logo);if(u)o.logo_url=u;await chk(w?await sb.from('teams').update(o).eq('id',w):await sb.from('teams').insert(o))})())}
+ if(id==='fa')return act((async()=>{const u=await up(v.img);await chk(await sb.from('announcements').insert({title:v.title,content:v.content,published:v.published==='true',image_url:u,created_by:me.id}))})());
+ if(id==='fs')return act((async()=>chk(await sb.from('competition_settings').update({competition_name:v.competition_name,location:v.location,frequency:v.frequency,points_rules:{win_3_0:+v.win_3_0,win_3_1:+v.win_3_0,win_3_2:+v.win_3_2,loss_2_3:+v.loss_2_3,loss_other:0},updated_at:new Date()}).eq('id',1)))())});
+const err=m=>{msg='!'+m;render()};
+const ask=(t,f)=>confirm(t)&&act(f);
+document.addEventListener('click',async e=>{
+ const a=e.target.closest('a[href^="/"]');if(a&&!e.metaKey&&!e.ctrlKey){e.preventDefault();history.pushState(0,'',a.getAttribute('href'));msg='';return render()}
+ const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+ if(d.tab){tab=d.tab;editM=resM=editT=null;msg='';return render()}
+ if(d.edit){editM=d.edit;resM=null;return render()}if(d.res){resM=d.res;return render()}if(d.et){editT=d.et;return render()}
+ if(d.act==='cancel'){editM=resM=editT=null;return render()}
+ if(d.act==='out'){await sb.auth.signOut();return render()}
+ if(d.act==='clr'){const m=resM;resM=null;return ask('Clear this result? Standings will update.',(async()=>{await chk(await sb.from('matches').update({status:'scheduled'}).eq('id',m));await chk(await sb.from('match_sets').delete().eq('match_id',m))})())}
+ if(d.del)return ask('Delete this match and its result?',(async()=>chk(await sb.from('matches').delete().eq('id',d.del)))());
+ if(d.deld)return ask('Delete this matchday?',(async()=>chk(await sb.from('matchdays').delete().eq('id',d.deld)))());
+ if(d.dt)return ask('Delete this team? Teams with matches cannot be deleted; set them inactive instead.',(async()=>chk(await sb.from('teams').delete().eq('id',d.dt)))());
+ if(d.dela)return ask('Delete this announcement?',(async()=>chk(await sb.from('announcements').delete().eq('id',d.dela)))());
+ if(d.pub){const x=D.a.find(y=>y.id===d.pub);return act((async()=>chk(await sb.from('announcements').update({published:!x.published}).eq('id',x.id)))())}});
+window.onpopstate=render;
+
+async function render(){
+ const p=location.pathname.replace(/\/$/,'')||'/',[,r,id]=p.split('/'),k=r||'home';
+ document.querySelectorAll('nav.bot a').forEach(a=>a.classList.toggle('on',a.dataset.n===(k==='team'?'teams':k==='match'?'results':k)));
+ try{if(!D){app.innerHTML='<div class="sk"></div><div class="sk"></div><div class="sk"></div>';await load()}
+  app.innerHTML=k==='admin'?await admin():(V[k]||V.home)(id);scrollTo(0,0)
+ }catch(e){app.innerHTML=`<div class="err">Could not load data: ${esc(e.message||e)}<div class="acts"><button onclick="D=null;render()">Try again</button></div></div>`}}
+sb.auth.onAuthStateChange(()=>{if(location.pathname.startsWith('/admin'))render()});
+render();
+</script></body></html>
