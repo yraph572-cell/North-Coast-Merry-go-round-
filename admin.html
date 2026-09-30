@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>North Coast Merry-Go-Round</title><meta name="theme-color" content="#ffffff">
+<title>Admin | North Coast Merry-Go-Round</title><meta name="robots" content="noindex"><meta name="theme-color" content="#ffffff">
 <style>
 :root{--bg:#eceff4;--ink:#1f2d3d;--mut:#66748a;--teal:#0e8aa6;--org:#e8590c;--grn:#5b9a0a;--blue:#4b6fd6;--navy:#3a4a63;--red:#d63b3b}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:76px}
@@ -31,7 +31,7 @@ button.alt{background:#e3e8ee;color:var(--ink)}button.dng{background:var(--red)}
 </style></head><body>
 <header class="top"><h1>North Coast Merry-Go-Round</h1><p id="sub">Volleyball · North Coast, Mombasa, Kenya</p></header>
 <main id="app"></main>
-<nav class="bot" aria-label="Main"><a href="/" data-n="home">Home</a><a href="/fixtures" data-n="fixtures">Fixtures</a><a href="/results" data-n="results">Results</a><a href="/standings" data-n="standings">Table</a><a href="/teams" data-n="teams">Teams</a><a href="/news" data-n="news">News</a><a href="/gallery" data-n="gallery">Gallery</a><a href="/leaders" data-n="leaders">Leaders</a><a href="/about" data-n="about">About</a></nav>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <script>
@@ -90,7 +90,7 @@ ${roster(id)}<h2>Fixtures and results</h2>${list(ms,'No matches yet.',m=>mcard(m
 match(id){const m=D.m.find(x=>x.id===id);if(!m)return empty('Match not found.');const r=score(m);
 return `<div class="card" style="--c:var(--org)"><div class="hd"><span>${esc(D.c.competition_name||'')} ${esc(mdn(m))}</span>${pill(m.status)}</div><div class="row"><b class="big">${tn(m.team1_id)}</b><span class="sc">${m.status==='completed'?r.a:''}</span></div><div class="row"><b class="big">${tn(m.team2_id)}</b><span class="sc">${m.status==='completed'?r.b:''}</span></div><p class="mut">${fdate(m)}. ${esc(m.venue||'Venue to be confirmed')}</p></div>
 <h2>Set scores</h2>${sets(m).length?`<div class="card" style="--c:var(--teal)">${sets(m).map(s=>`<div class="row"><span>Set ${s.set_number}</span><b>${s.team1_score} – ${s.team2_score}</b></div>`).join('')}</div>`:empty('No set scores recorded yet.')}`},
-about(){const c=D.c;return `<div class="card" style="--c:var(--navy)"><div class="hd">About</div><div class="big">${esc(c.competition_name)}</div><p>A volleyball competition played by ${D.t.filter(t=>t.active).length} teams across ${esc(c.location)}. Matches are played ${esc((c.frequency||'').toLowerCase())}.</p><p class="mut">Points: 3-0 or 3-1 win earns ${c.points_rules?.win_3_0??3}, 3-2 win ${c.points_rules?.win_3_2??2}, 2-3 loss ${c.points_rules?.loss_2_3??1}.</p></div><h2>Announcements</h2>${list(pub(),'No announcements available.',ann)}`}
+about(){const c=D.c;return `<div class="card" style="--c:var(--navy)"><div class="hd">About</div><div class="big">${esc(c.competition_name)}</div><p>A volleyball competition played by ${D.t.filter(t=>t.active).length} teams across ${esc(c.location)}. Matches are played ${esc((c.frequency||'').toLowerCase())}.</p><p class="mut">Points: 3-0 or 3-1 win earns ${c.points_rules?.win_3_0??3}, 3-2 win ${c.points_rules?.win_3_2??2}, 2-3 loss ${c.points_rules?.loss_2_3??1}.</p></div><h2>Announcements</h2>${list(pub(),'No announcements available.',ann)}<div class="acts"><a class="btn alt" href="/admin">Admin login</a></div>`}
 };
 
 /* ---------- ADMIN ---------- */
@@ -142,8 +142,7 @@ document.addEventListener('submit',async e=>{e.preventDefault();const id=e.targe
 const err=m=>{msg='!'+m;render()};
 const ask=(t,f)=>confirm(t)&&act(f);
 document.addEventListener('click',async e=>{
- const a=e.target.closest('a[href^="/"]');if(a&&!e.metaKey&&!e.ctrlKey){e.preventDefault();history.pushState(0,'',a.getAttribute('href'));msg='';return render()}
- const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+  const b=e.target.closest('button');if(!b)return;const d=b.dataset;
  if(d.tab){tab=d.tab;editM=resM=editT=null;msg='';return render()}
  if(d.edit){editM=d.edit;resM=null;return render()}if(d.res){resM=d.res;return render()}if(d.et){editT=d.et;return render()}
  if(d.act==='cancel'){editM=resM=editT=null;return render()}
@@ -162,12 +161,7 @@ document.addEventListener('click',async e=>{
  if(d.pub){const x=D.a.find(y=>y.id===d.pub);return act((async()=>chk(await sb.from('announcements').update({published:!x.published}).eq('id',x.id)))())}});
 window.onpopstate=render;document.addEventListener('change',e=>{if(e.target.id==='pt'){pt=e.target.value;render()}});
 
-async function render(){
- const p=location.pathname.replace(/\/$/,'')||'/',[,r,id]=p.split('/'),k=r||'home';
- document.querySelectorAll('nav.bot a').forEach(a=>a.classList.toggle('on',a.dataset.n===(k==='team'?'teams':k==='match'?'results':k==='match'?'results':k)));
- try{if(!D){app.innerHTML='<div class="sk"></div><div class="sk"></div><div class="sk"></div>';await load()}
-  app.innerHTML=(V[k]||V.home)(id);scrollTo(0,0)
- }catch(e){app.innerHTML=`<div class="err">Could not load data: ${esc(e.message||e)}<div class="acts"><button onclick="D=null;render()">Try again</button></div></div>`}}
-sb.auth.onAuthStateChange(()=>{if(location.pathname.startsWith('/admin'))render()});
+async function render(){try{if(!D){app.innerHTML='<div class="sk"></div>';await load()}app.innerHTML=await admin();$('#sub').textContent='Admin area'}catch(e){app.innerHTML=`<div class="err">Could not load: ${esc(e.message||e)}<div class="acts"><button onclick="D=null;render()">Try again</button></div></div>`}}
+sb.auth.onAuthStateChange(()=>{render()});
 render();
 </script></body></html>
